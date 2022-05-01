@@ -1,7 +1,11 @@
 import helpers.NetAddress;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Client {
@@ -11,19 +15,16 @@ public class Client {
         this.clientPort = clientPort;
     }
 
-    public NetAddress sendRequest(String mainServerAddress, int mainServerPort, String word, String languageCode) throws IOException {
-        Socket mainServerSocket = new Socket(mainServerAddress, mainServerPort, InetAddress.getLocalHost(), clientPort);
-        //send request
+    public String sendRequest(String mainServerAddress, int mainServerPort, String word, String languageCode) throws IOException {
+        Socket mainServerSocket = new Socket(mainServerAddress, mainServerPort);
+        PrintWriter out = new PrintWriter(mainServerSocket.getOutputStream(), true);
+        out.println(languageCode+" "+word+" "+clientPort);
         mainServerSocket.close();
-        return new NetAddress(0, ""); //todo
+        ServerSocket clientServerSocket = new ServerSocket(clientPort);
+        Socket socket = clientServerSocket.accept();
+        BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String translatedWord = inFromClient.readLine();
+        clientServerSocket.close();
+        return translatedWord;
     }
-
-    public String receiveResponse(String languageServerAddress, int languageServerPort) throws IOException {
-        Socket languageServerSocket = new Socket(languageServerAddress, languageServerPort, InetAddress.getLocalHost(), clientPort);
-        //wait for response
-        languageServerSocket.close();
-        return ""; //todo
-    }
-
-
 }

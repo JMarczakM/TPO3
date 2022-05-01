@@ -1,15 +1,20 @@
-import MainServer.MainServer;
+import mainServer.MainServer;
 import helpers.NetAddress;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Locale;
 
 public class Ui {
     private MainServer mainServer;
+    private String[] validLanguageCodes;
 
-    public Ui(MainServer mainServer) {
+
+    public Ui(MainServer mainServer, String[] validLanguageCodes) {
         this.mainServer = mainServer;
+        this.validLanguageCodes = validLanguageCodes;
     }
 
     public void start(){
@@ -17,7 +22,7 @@ public class Ui {
         JPanel panel = new JPanel();
         GridLayout layout = new GridLayout(4,2);
         panel.setLayout(layout);
-        jFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         jFrame.setSize(200, 150);
 
         //labels
@@ -34,12 +39,20 @@ public class Ui {
         //button
         JButton jButton = new JButton("submit");
         jButton.addActionListener(e -> {
-            System.out.println("Send request to main server through client");
             try {
-                Client client = new Client(Integer.parseInt(portField.getText()));
-                NetAddress languageServerNetAddress = client.sendRequest(mainServer.getAddress(), mainServer.getPort() ,wordField.getText(), languageCodeField.getText());
-                responseLabel.setText(client.receiveResponse(languageServerNetAddress.getAddress(), languageServerNetAddress.getPort()));
-
+                try {
+                    int port = Integer.parseInt(portField.getText());
+                    if(!Arrays.stream(validLanguageCodes).anyMatch(languageCodeField.getText()::equals)){
+                        responseLabel.setText("Invalid input");
+                    }
+                    else {
+                        Client client = new Client(port);
+                        String word = client.sendRequest(mainServer.getAddress(), mainServer.getPort() ,wordField.getText(), languageCodeField.getText().toLowerCase());
+                        responseLabel.setText(word);
+                    }
+                } catch (NumberFormatException exception) {
+                    responseLabel.setText("Invalid input");
+                }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
